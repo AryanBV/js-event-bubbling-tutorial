@@ -201,3 +201,52 @@ body {
     border-radius: 4px;
     cursor: pointer;
 }
+
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    border-radius: 4px;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown-content button {
+    width: 100%;
+    padding: 8px 16px;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.dropdown-content button:hover {
+    background-color: #f1f1f1;
+}
+
+.stop-indicator {
+    position: relative;
+}
+
+.stop-indicator::after {
+    content: '🛑';
+    position: absolute;
+    right: -25px;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

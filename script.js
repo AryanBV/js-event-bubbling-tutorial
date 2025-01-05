@@ -115,4 +115,57 @@ function logEvent(element, phase, event) {
             clearEventLog();
         }
     }, true);
+
+    // Add handlers for dropdown actions
+    document.addEventListener('click', function(event) {
+        const dropdownAction = event.target.closest('.dropdown-content button');
+        if (dropdownAction) {
+            event.stopPropagation(); // Stop event from bubbling
+            const action = dropdownAction.dataset.action;
+            const comment = dropdownAction.closest('.comment');
+            
+            // Add stop indicator
+            dropdownAction.classList.add('stop-indicator');
+            setTimeout(() => dropdownAction.classList.remove('stop-indicator'), 1000);
+
+            handleDropdownAction(action, comment);
+            
+            // Update event log to show propagation was stopped
+            eventLog.innerHTML += '<div style="color: red">Event propagation stopped! ⛔</div>';
+        }
+    });
+
+    function handleDropdownAction(action, comment) {
+        switch(action) {
+            case 'edit':
+                const newText = prompt('Edit comment:', comment.querySelector('p').textContent);
+                if (newText) {
+                    comment.querySelector('p').textContent = newText;
+                }
+                break;
+            case 'delete':
+                if (confirm('Delete this comment?')) {
+                    comment.remove();
+                }
+                break;
+        }
+    }
+
+    // Update logEvent function to show when propagation is stopped
+    function logEvent(element, phase, event) {
+        const elementId = element.id || element.className || 'unnamed-element';
+        const phaseName = phase === 1 ? 'Capture' : phase === 2 ? 'Target' : 'Bubble';
+        phaseIndicator.textContent = `Current Phase: ${phaseName}`;
+        
+        let path = event.composedPath();
+        let pathString = path
+            .map(el => el.id || el.className || 'unnamed')
+            .join(' → ');
+            
+        eventLog.innerHTML = `
+            <div><strong>Event Target:</strong> ${event.target.id || event.target.className}</div>
+            <div><strong>Complete Path:</strong> ${pathString}</div>
+            <div><strong>Current Element:</strong> ${elementId} (${phaseName} phase)</div>
+        `;
+    }
 });
