@@ -15,10 +15,10 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: '14'
-    - run: npm ci
-    - run: npm run build
+    - run: cd js-event-bubbling-tutorial && npm ci
+    - run: cd js-event-bubbling-tutorial && npm run build
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build
+        publish_dir: ./js-event-bubbling-tutorial/build
