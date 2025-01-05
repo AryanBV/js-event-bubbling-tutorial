@@ -311,3 +311,20 @@ body {
     border-radius: 4px;
     font-family: monospace;
 }
+
+.event-flow {
+    position: relative;
+    margin: 20px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+.flow-arrow {
+    position: absolute;
+    animation: flowMove 1s infinite;
+}
+
+@keyframes flowMove {
+    from { transform: translateY(0); }
+    to { transform: translateY(100%); }
+}

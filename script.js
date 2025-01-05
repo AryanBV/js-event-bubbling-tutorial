@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // DOM Elements
     const commentsContainer = document.getElementById('comments-container');
     const eventLog = document.getElementById('event-log');
     const phaseIndicator = document.getElementById('phase-indicator');
@@ -6,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const phaseLog = document.getElementById('phase-log');
     const perfLog = document.getElementById('perf-log');
 
+    // Step 1: Basic Event Bubbling
     commentsContainer.addEventListener('click', function(e) {
         const startTime = performance.now();
         const button = e.target.closest('[data-action]');
@@ -24,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Helper Functions
     function clearEventLog() {
         eventLog.innerHTML = '';
         phaseIndicator.innerHTML = '';
@@ -61,6 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
 
+    // Step 2: Practical Applications
     function handleAction(action, comment) {
         switch(action) {
             case 'like':
@@ -120,6 +124,14 @@ document.addEventListener('DOMContentLoaded', function() {
         return comment;
     }
 
+    // Step 3: Event Propagation Control
+    function handleDropdownAction(action, comment) {
+        event.stopPropagation();
+        handleAction(action, comment);
+        eventLog.innerHTML += '<div style="color: red">Event propagation stopped! ⛔</div>';
+    }
+
+    // Step 4: Event Flow Phases
     function visualizePhase(phase, event) {
         const element = event.currentTarget;
         element.classList.add(`phase-${phase.toLowerCase()}`);
@@ -139,6 +151,29 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
 
+    // Step 5: Event Delegation Implementation
+    function setupEventDelegation() {
+        let oldHandlerCount = 0;
+        let newHandlerCount = 1;
+
+        function updatePerformanceMetrics() {
+            const buttons = document.querySelectorAll('[data-action]');
+            oldHandlerCount = buttons.length;
+            perfLog.innerHTML += `
+                <div>Traditional approach: ${oldHandlerCount} handlers</div>
+                <div>Delegation approach: ${newHandlerCount} handler</div>
+                <div>Memory saved: ${(oldHandlerCount - newHandlerCount) * 4}KB</div>
+            `;
+        }
+
+        addCommentBtn.addEventListener('click', () => {
+            setTimeout(updatePerformanceMetrics, 100);
+        });
+
+        updatePerformanceMetrics();
+    }
+
+    // Phase Controls
     function setupPhaseToggles() {
         const captureToggle = document.getElementById('capture-toggle');
         const bubbleToggle = document.getElementById('bubble-toggle');
@@ -172,13 +207,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Initialize
     setupPhaseToggles();
+    setupEventDelegation();
     
     addCommentBtn.addEventListener('click', () => {
         const newComment = createComment('New top-level comment');
         commentsContainer.appendChild(newComment);
     });
 
+    // Handle dropdown actions with stopPropagation
     document.addEventListener('click', function(event) {
         const dropdownAction = event.target.closest('.dropdown-content button');
         if (dropdownAction) {
