@@ -1,59 +1,49 @@
 # Step 5: Event Delegation
 
-## Learning Objectives
-- Understand event delegation basics
-- Implement event delegation in the comment system
-- See performance benefits of delegation
+## What is Event Delegation?
+Using event bubbling to handle events on multiple elements with a single listener. Like having one person manage multiple buttons instead of one person per button.
 
-## Key Concepts
+## How It Works
+```html
+<div id="comments">
+    <div class="comment">
+        <button class="like">Like</button>
+    </div>
+    <div class="comment">
+        <button class="like">Like</button>
+    </div>
+</div>
+```
 
-### What is Event Delegation?
-Event delegation lets you handle events on multiple elements with a single listener on their parent. Instead of adding listeners to each button, we add one listener to the container.
-
-### Benefits
-1. Better Performance: Fewer event listeners
-2. Dynamic Elements: Works with new elements automatically
-3. Less Memory Usage: One listener instead of many
-
-## Implementation
-
-### 1. Comment List with Delegation
 ```javascript
-// Before: Multiple listeners
-const buttons = document.querySelectorAll('.like-button');
-buttons.forEach(button => {
+// Instead of this:
+document.querySelectorAll('.like').forEach(button => {
     button.addEventListener('click', handleLike);
 });
 
-// After: Single delegated listener
-commentsContainer.addEventListener('click', e => {
-    if (e.target.matches('.like-button')) {
-        handleLike(e);
+// Do this:
+document.getElementById('comments').addEventListener('click', event => {
+    if (event.target.matches('.like')) {
+        handleLike(event);
     }
 });
 ```
 
-### 2. Dynamic Comment Loading
+## Benefits
+1. Works with new elements automatically
+2. Less memory usage
+3. Better performance
+4. Cleaner code
+
+## Performance Check
 ```javascript
-function addNewComment() {
-    const comment = createComment('New comment');
-    commentsContainer.appendChild(comment);
-    // No need to add new listeners!
-}
+// Add performance tracking
+commentsContainer.addEventListener('click', event => {
+    const start = performance.now();
+    
+    handleAction(event);
+    
+    const end = performance.now();
+    console.log(`Handled in ${end - start}ms`);
+});
 ```
-
-## Exercise: Convert to Delegation
-1. Remove individual button listeners
-2. Add container listener for all actions
-3. Test with dynamically added comments
-4. Compare performance (before/after)
-
-## Tips
-- Use e.target.matches() for element checking
-- Keep handler logic simple
-- Test with different nesting levels
-
-## Next Steps
-- Try adding new features using delegation
-- Experiment with different event types
-- Practice with your own projects
