@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Bubbling Tutorial - Comment System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Main comments section - Top level container -->
+    <div id="comments-container" class="comments-container">
+        <h2>Comments Section</h2>
+
+        <!-- Parent comment -->
+        <div id="parent-comment" class="comment">
+            <div class="comment-content">
+                <p>This is a parent comment. Click the like button to see event bubbling in action!</p>
+                <button class="like-button">Like</button>
+            </div>
+
+            <!-- Nested reply container -->
+            <div class="replies">
+                <!-- Child comment -->
+                <div id="child-comment" class="comment">
+                    <div class="comment-content">
+                        <p>This is a reply to the parent comment. The like button here will also demonstrate event bubbling!</p>
+                        <button class="like-button">Like</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event path display area -->
+    <div id="event-path" class="event-path">
+        <h3>Event Propagation Path:</h3>
+        <div id="event-log"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
