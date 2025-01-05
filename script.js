@@ -1,63 +1,118 @@
-// Get DOM elements
-const commentsContainer = document.getElementById('comments-container');
-const parentComment = document.getElementById('parent-comment');
-const childComment = document.getElementById('child-comment');
-const eventLog = document.getElementById('event-log');
+document.addEventListener('DOMContentLoaded', function() {
+    const commentsContainer = document.getElementById('comments-container');
+    const eventLog = document.getElementById('event-log');
+    const phaseIndicator = document.getElementById('phase-indicator');
+    const addCommentBtn = document.getElementById('add-comment');
 
-// Function to add visual feedback
-function highlightElement(element, order) {
-    // Add highlight class
-    element.classList.add('highlight');
-    
-    // Add propagation indicator
-    element.classList.add('propagation-active');
-    
-    // Log the event path
-    const elementId = element.id || 'unnamed-element';
-    eventLog.innerHTML += `<div>${order}. Event bubbled through: ${elementId}</div>`;
-    
-    // Remove highlight after animation
-    setTimeout(() => {
-        element.classList.remove('highlight');
-        element.classList.remove('propagation-active');
-    }, 1000);
-}
-
-// Clear previous event log
-function clearEventLog() {
-    eventLog.innerHTML = '';
-}
-
-// Add event listeners to demonstrate bubbling
-commentsContainer.addEventListener('click', function(event) {
-    if (event.target.classList.contains('like-button')) {
-        highlightElement(this, 3);
-        console.log('Event reached comments container');
+    function clearEventLog() {
+        eventLog.innerHTML = '';
+        phaseIndicator.innerHTML = '';
     }
-});
 
-parentComment.addEventListener('click', function(event) {
-    if (event.target.classList.contains('like-button')) {
-        highlightElement(this, 2);
-        console.log('Event reached parent comment');
-    }
-});
-
-childComment.addEventListener('click', function(event) {
-    if (event.target.classList.contains('like-button')) {
-        highlightElement(this, 2);
-        console.log('Event reached child comment');
-    }
-});
-
-// Add event listeners to all like buttons
-document.querySelectorAll('.like-button').forEach(button => {
-    button.addEventListener('click', function(event) {
-        clearEventLog(); // Clear previous event log
-        highlightElement(this, 1);
-        console.log('Event started at like button');
+    function highlightPath(event) {
+    const path = event.composedPath();
+    let delay = 0;
+    
+    path.forEach((el) => {
+        if (el.nodeType === 1) { // Check if element node
+            setTimeout(() => {
+                el.classList.add('highlight-path');
+                setTimeout(() => el.classList.remove('highlight-path'), 500);
+            }, delay);
+            delay += 200;
+        }
     });
-});
+}
 
-// Add explanatory log at startup
-console.log('Event bubbling demo initialized! Click any like button to see the event bubble up through the DOM.');
+function logEvent(element, phase, event) {
+    highlightPath(event);
+        const elementId = element.id || element.className || 'unnamed-element';
+        const phaseName = phase === 1 ? 'Capture' : phase === 2 ? 'Target' : 'Bubble';
+        phaseIndicator.textContent = `Current Phase: ${phaseName}`;
+        
+        // Get complete event path
+        let path = event.composedPath();
+        let pathString = path
+            .map(el => el.id || el.className || 'unnamed')
+            .join(' → ');
+            
+        eventLog.innerHTML = `
+            <div><strong>Event Target:</strong> ${event.target.id || event.target.className}</div>
+            <div><strong>Complete Path:</strong> ${pathString}</div>
+            <div><strong>Current Element:</strong> ${elementId} (${phaseName} phase)</div>
+        `;
+    }
+
+    function handleAction(action, comment) {
+        switch(action) {
+            case 'like':
+                comment.classList.add('highlight');
+                setTimeout(() => comment.classList.remove('highlight'), 1000);
+                break;
+            case 'reply':
+                const newComment = createComment('New reply comment');
+                comment.querySelector('.replies')?.appendChild(newComment);
+                break;
+            case 'share':
+                alert('Share functionality would go here');
+                break;
+            case 'toggle':
+                const replies = comment.querySelector('.replies');
+                if (replies) {
+                    replies.classList.toggle('collapsed');
+                    const button = comment.querySelector('[data-action="toggle"]');
+                    button.textContent = replies.classList.contains('collapsed') ? '🔼 Show' : '🔽 Hide';
+                }
+                break;
+        }
+    }
+
+    function createComment(content) {
+        const comment = document.createElement('div');
+        comment.className = 'comment';
+        comment.innerHTML = `
+            <div class="comment-content">
+                <p>${content}</p>
+                <div class="action-menu">
+                    <button data-action="like">👍 Like</button>
+                    <button data-action="reply">💬 Reply</button>
+                    <button data-action="share">↗️ Share</button>
+                </div>
+            </div>
+            <div class="replies"></div>
+        `;
+        return comment;
+    }
+
+    // Demonstrate capture and bubble phases
+    commentsContainer.addEventListener('click', function(event) {
+        if (event.target.matches('[data-action]')) {
+            logEvent(this, event.eventPhase, event);
+        }
+    }, true); // Capture phase
+
+    commentsContainer.addEventListener('click', function(event) {
+        if (event.target.matches('[data-action]')) {
+            logEvent(this, event.eventPhase, event);
+            const button = event.target;
+            const action = button.dataset.action;
+            const comment = button.closest('.comment');
+            if (comment && action) {
+                handleAction(action, comment);
+            }
+        }
+    }); // Bubble phase
+
+    // Add new comment button handler
+    addCommentBtn.addEventListener('click', function() {
+        const newComment = createComment('New top-level comment');
+        commentsContainer.appendChild(newComment);
+    });
+
+    // Clear log when starting new action
+    document.addEventListener('click', function(event) {
+        if (event.target.matches('[data-action]')) {
+            clearEventLog();
+        }
+    }, true);
+});

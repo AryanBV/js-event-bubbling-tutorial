@@ -95,3 +95,109 @@ body {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+
+.action-menu {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.action-menu button {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    transition: background-color 0.2s;
+}
+
+.action-menu button:hover {
+    background-color: #e0e0e0;
+}
+
+.phase-display {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#phase-indicator {
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #f8f8f8;
+    border-radius: 4px;
+}
+
+.replies {
+    transition: height 0.3s ease;
+}
+
+.replies.collapsed {
+    height: 0;
+    overflow: hidden;
+}
+
+.add-comment-btn {
+    margin-bottom: 20px;
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.action-menu {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.action-menu button {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    transition: background-color 0.2s;
+}
+
+.action-menu button:hover {
+    background-color: #e0e0e0;
+}
+
+.phase-display {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#phase-indicator {
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #f8f8f8;
+    border-radius: 4px;
+}
+
+.replies {
+    transition: height 0.3s ease;
+}
+
+.replies.collapsed {
+    height: 0;
+    overflow: hidden;
+}
+
+.add-comment-btn {
+    margin-bottom: 20px;
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
