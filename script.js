@@ -4,16 +4,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const phaseIndicator = document.getElementById('phase-indicator');
     const addCommentBtn = document.getElementById('add-comment');
     const phaseLog = document.getElementById('phase-log');
+    const perfLog = document.getElementById('perf-log');
+
+    commentsContainer.addEventListener('click', function(e) {
+        const startTime = performance.now();
+        const button = e.target.closest('[data-action]');
+        if (!button) return;
+        
+        const action = button.dataset.action;
+        const comment = button.closest('.comment');
+        
+        if (action && comment) {
+            handleAction(action, comment);
+            logEvent(this, e.eventPhase, e);
+            visualizePhase(e.eventPhase === 1 ? 'Capture' : 'Bubble', e);
+            
+            const endTime = performance.now();
+            perfLog.textContent = `Action handled in ${(endTime - startTime).toFixed(2)}ms`;
+        }
+    });
 
     function clearEventLog() {
         eventLog.innerHTML = '';
         phaseIndicator.innerHTML = '';
+        perfLog.innerHTML = '';
     }
 
     function highlightPath(event) {
         const path = event.composedPath();
         let delay = 0;
-        
         path.forEach((el) => {
             if (el.nodeType === 1) {
                 setTimeout(() => {
@@ -31,24 +50,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const phaseName = phase === 1 ? 'Capture' : phase === 2 ? 'Target' : 'Bubble';
         phaseIndicator.textContent = `Current Phase: ${phaseName}`;
         
-        let path = event.composedPath();
-        let pathString = path
+        let path = event.composedPath()
             .map(el => el.id || el.className || 'unnamed')
             .join(' → ');
             
         eventLog.innerHTML = `
             <div><strong>Event Target:</strong> ${event.target.id || event.target.className}</div>
-            <div><strong>Complete Path:</strong> ${pathString}</div>
+            <div><strong>Complete Path:</strong> ${path}</div>
             <div><strong>Current Element:</strong> ${elementId} (${phaseName} phase)</div>
         `;
     }
 
     function handleAction(action, comment) {
-        if (!comment) {
-            console.warn('No comment element found');
-            return;
-        }
-
         switch(action) {
             case 'like':
                 comment.classList.add('highlight');
@@ -67,6 +80,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     replies.classList.toggle('collapsed');
                     const button = comment.querySelector('[data-action="toggle"]');
                     button.textContent = replies.classList.contains('collapsed') ? '🔼 Show' : '🔽 Hide';
+                }
+                break;
+            case 'edit':
+                const newText = prompt('Edit comment:', comment.querySelector('p').textContent);
+                if (newText) {
+                    comment.querySelector('p').textContent = newText;
+                }
+                break;
+            case 'delete':
+                if (confirm('Delete this comment?')) {
+                    comment.remove();
                 }
                 break;
         }
@@ -96,27 +120,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return comment;
     }
 
-    // Phase Demo Setup
-    function setupPhaseDemo() {
-        commentsContainer.addEventListener('click', function(event) {
-            if (event.target.matches('[data-action]')) {
-                visualizePhase('Capture', event);
-            }
-        }, true);
-
-        commentsContainer.addEventListener('click', function(event) {
-            if (event.target.matches('[data-action]')) {
-                visualizePhase('Bubble', event);
-            }
-        });
-    }
-
     function visualizePhase(phase, event) {
         const element = event.currentTarget;
         element.classList.add(`phase-${phase.toLowerCase()}`);
-        
         logPhase(phase, event.target, event.currentTarget);
-        
         setTimeout(() => {
             element.classList.remove(`phase-${phase.toLowerCase()}`);
         }, 500);
@@ -136,38 +143,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const captureToggle = document.getElementById('capture-toggle');
         const bubbleToggle = document.getElementById('bubble-toggle');
         
-        function updateListeners() {
-            removeAllListeners();
-            if (captureToggle.checked) addCaptureListeners();
-            if (bubbleToggle.checked) addBubbleListeners();
+        function updatePhases() {
+            commentsContainer.removeEventListener('click', handleCapture, true);
+            commentsContainer.removeEventListener('click', handleBubble);
+
+            if (captureToggle.checked) {
+                commentsContainer.addEventListener('click', handleCapture, true);
+            }
+            if (bubbleToggle.checked) {
+                commentsContainer.addEventListener('click', handleBubble);
+            }
         }
         
-        captureToggle.addEventListener('change', updateListeners);
-        bubbleToggle.addEventListener('change', updateListeners);
-        
-        updateListeners();
-    }
-
-    function removeAllListeners() {
-        const elements = document.querySelectorAll('.comment, .action-menu button');
-        elements.forEach(element => {
-            element.removeEventListener('click', handleCapture, true);
-            element.removeEventListener('click', handleBubble);
-        });
-    }
-
-    function addCaptureListeners() {
-        const elements = document.querySelectorAll('.comment, .action-menu button');
-        elements.forEach(element => {
-            element.addEventListener('click', handleCapture, true);
-        });
-    }
-
-    function addBubbleListeners() {
-        const elements = document.querySelectorAll('.comment, .action-menu button');
-        elements.forEach(element => {
-            element.addEventListener('click', handleBubble);
-        });
+        captureToggle.addEventListener('change', updatePhases);
+        bubbleToggle.addEventListener('change', updatePhases);
+        updatePhases();
     }
 
     function handleCapture(event) {
@@ -182,35 +172,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Event Listeners
-    commentsContainer.addEventListener('click', function(event) {
-        if (event.target.matches('[data-action]')) {
-            logEvent(this, event.eventPhase, event);
-        }
-    }, true);
-
-    commentsContainer.addEventListener('click', function(event) {
-        if (event.target.matches('[data-action]')) {
-            logEvent(this, event.eventPhase, event);
-            const button = event.target;
-            const action = button.dataset.action;
-            const comment = button.closest('.comment');
-            if (comment && action) {
-                handleAction(action, comment);
-            }
-        }
-    });
-
-    addCommentBtn.addEventListener('click', function() {
+    setupPhaseToggles();
+    
+    addCommentBtn.addEventListener('click', () => {
         const newComment = createComment('New top-level comment');
         commentsContainer.appendChild(newComment);
     });
-
-    document.addEventListener('click', function(event) {
-        if (event.target.matches('[data-action]')) {
-            clearEventLog();
-        }
-    }, true);
 
     document.addEventListener('click', function(event) {
         const dropdownAction = event.target.closest('.dropdown-content button');
@@ -221,30 +188,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             dropdownAction.classList.add('stop-indicator');
             setTimeout(() => dropdownAction.classList.remove('stop-indicator'), 1000);
-
-            handleDropdownAction(action, comment);
             
+            handleAction(action, comment);
             eventLog.innerHTML += '<div style="color: red">Event propagation stopped! ⛔</div>';
         }
     });
-
-    function handleDropdownAction(action, comment) {
-        switch(action) {
-            case 'edit':
-                const newText = prompt('Edit comment:', comment.querySelector('p').textContent);
-                if (newText) {
-                    comment.querySelector('p').textContent = newText;
-                }
-                break;
-            case 'delete':
-                if (confirm('Delete this comment?')) {
-                    comment.remove();
-                }
-                break;
-        }
-    }
-
-    // Initialize phase demo and toggles
-    setupPhaseDemo();
-    setupPhaseToggles();
 });
