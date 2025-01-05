@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const eventLog = document.getElementById('event-log');
     const phaseIndicator = document.getElementById('phase-indicator');
     const addCommentBtn = document.getElementById('add-comment');
+    const phaseLog = document.getElementById('phase-log');
 
     function clearEventLog() {
         eventLog.innerHTML = '';
@@ -10,27 +11,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function highlightPath(event) {
-    const path = event.composedPath();
-    let delay = 0;
-    
-    path.forEach((el) => {
-        if (el.nodeType === 1) { // Check if element node
-            setTimeout(() => {
-                el.classList.add('highlight-path');
-                setTimeout(() => el.classList.remove('highlight-path'), 500);
-            }, delay);
-            delay += 200;
-        }
-    });
-}
+        const path = event.composedPath();
+        let delay = 0;
+        
+        path.forEach((el) => {
+            if (el.nodeType === 1) {
+                setTimeout(() => {
+                    el.classList.add('highlight-path');
+                    setTimeout(() => el.classList.remove('highlight-path'), 500);
+                }, delay);
+                delay += 200;
+            }
+        });
+    }
 
-function logEvent(element, phase, event) {
-    highlightPath(event);
+    function logEvent(element, phase, event) {
+        highlightPath(event);
         const elementId = element.id || element.className || 'unnamed-element';
         const phaseName = phase === 1 ? 'Capture' : phase === 2 ? 'Target' : 'Bubble';
         phaseIndicator.textContent = `Current Phase: ${phaseName}`;
         
-        // Get complete event path
         let path = event.composedPath();
         let pathString = path
             .map(el => el.id || el.className || 'unnamed')
@@ -49,10 +49,6 @@ function logEvent(element, phase, event) {
             return;
         }
 
-        // Cache DOM elements
-        const repliesContainer = comment.querySelector('.replies');
-        const toggleButton = comment.querySelector('[data-action="toggle"]');
-
         switch(action) {
             case 'like':
                 comment.classList.add('highlight');
@@ -60,19 +56,17 @@ function logEvent(element, phase, event) {
                 break;
             case 'reply':
                 const newComment = createComment('New reply comment');
-                repliesContainer?.appendChild(newComment);
+                comment.querySelector('.replies')?.appendChild(newComment);
                 break;
             case 'share':
                 alert('Share functionality would go here');
                 break;
             case 'toggle':
-                if (repliesContainer) {
-                    repliesContainer.classList.toggle('collapsed');
-                    if (toggleButton) {
-                        toggleButton.textContent = repliesContainer.classList.contains('collapsed') 
-                            ? '🔼 Show' 
-                            : '🔽 Hide';
-                    }
+                const replies = comment.querySelector('.replies');
+                if (replies) {
+                    replies.classList.toggle('collapsed');
+                    const button = comment.querySelector('[data-action="toggle"]');
+                    button.textContent = replies.classList.contains('collapsed') ? '🔼 Show' : '🔽 Hide';
                 }
                 break;
         }
@@ -85,9 +79,16 @@ function logEvent(element, phase, event) {
             <div class="comment-content">
                 <p>${content}</p>
                 <div class="action-menu">
+                    <div class="dropdown">
+                        <button data-action="options">⚙️ Options</button>
+                        <div class="dropdown-content">
+                            <button data-action="edit">✏️ Edit</button>
+                            <button data-action="delete">🗑️ Delete</button>
+                        </div>
+                    </div>
                     <button data-action="like">👍 Like</button>
                     <button data-action="reply">💬 Reply</button>
-                    <button data-action="share">↗️ Share</button>
+                    <button data-action="toggle">🔽 Toggle Replies</button>
                 </div>
             </div>
             <div class="replies"></div>
@@ -95,12 +96,98 @@ function logEvent(element, phase, event) {
         return comment;
     }
 
-    // Demonstrate capture and bubble phases
+    // Phase Demo Setup
+    function setupPhaseDemo() {
+        commentsContainer.addEventListener('click', function(event) {
+            if (event.target.matches('[data-action]')) {
+                visualizePhase('Capture', event);
+            }
+        }, true);
+
+        commentsContainer.addEventListener('click', function(event) {
+            if (event.target.matches('[data-action]')) {
+                visualizePhase('Bubble', event);
+            }
+        });
+    }
+
+    function visualizePhase(phase, event) {
+        const element = event.currentTarget;
+        element.classList.add(`phase-${phase.toLowerCase()}`);
+        
+        logPhase(phase, event.target, event.currentTarget);
+        
+        setTimeout(() => {
+            element.classList.remove(`phase-${phase.toLowerCase()}`);
+        }, 500);
+    }
+
+    function logPhase(phase, target, current) {
+        phaseLog.innerHTML += `
+            <div class="phase-entry ${phase.toLowerCase()}">
+                <strong>${phase} Phase:</strong>
+                Target: ${target.dataset.action || 'unknown'} →
+                Current: ${current.id || 'container'}
+            </div>
+        `;
+    }
+
+    function setupPhaseToggles() {
+        const captureToggle = document.getElementById('capture-toggle');
+        const bubbleToggle = document.getElementById('bubble-toggle');
+        
+        function updateListeners() {
+            removeAllListeners();
+            if (captureToggle.checked) addCaptureListeners();
+            if (bubbleToggle.checked) addBubbleListeners();
+        }
+        
+        captureToggle.addEventListener('change', updateListeners);
+        bubbleToggle.addEventListener('change', updateListeners);
+        
+        updateListeners();
+    }
+
+    function removeAllListeners() {
+        const elements = document.querySelectorAll('.comment, .action-menu button');
+        elements.forEach(element => {
+            element.removeEventListener('click', handleCapture, true);
+            element.removeEventListener('click', handleBubble);
+        });
+    }
+
+    function addCaptureListeners() {
+        const elements = document.querySelectorAll('.comment, .action-menu button');
+        elements.forEach(element => {
+            element.addEventListener('click', handleCapture, true);
+        });
+    }
+
+    function addBubbleListeners() {
+        const elements = document.querySelectorAll('.comment, .action-menu button');
+        elements.forEach(element => {
+            element.addEventListener('click', handleBubble);
+        });
+    }
+
+    function handleCapture(event) {
+        if (event.target.matches('[data-action]')) {
+            logPhase('Capture', event.target, event.currentTarget);
+        }
+    }
+
+    function handleBubble(event) {
+        if (event.target.matches('[data-action]')) {
+            logPhase('Bubble', event.target, event.currentTarget);
+        }
+    }
+
+    // Event Listeners
     commentsContainer.addEventListener('click', function(event) {
         if (event.target.matches('[data-action]')) {
             logEvent(this, event.eventPhase, event);
         }
-    }, true); // Capture phase
+    }, true);
 
     commentsContainer.addEventListener('click', function(event) {
         if (event.target.matches('[data-action]')) {
@@ -112,36 +199,31 @@ function logEvent(element, phase, event) {
                 handleAction(action, comment);
             }
         }
-    }); // Bubble phase
+    });
 
-    // Add new comment button handler
     addCommentBtn.addEventListener('click', function() {
         const newComment = createComment('New top-level comment');
         commentsContainer.appendChild(newComment);
     });
 
-    // Clear log when starting new action
     document.addEventListener('click', function(event) {
         if (event.target.matches('[data-action]')) {
             clearEventLog();
         }
     }, true);
 
-    // Add handlers for dropdown actions
     document.addEventListener('click', function(event) {
         const dropdownAction = event.target.closest('.dropdown-content button');
         if (dropdownAction) {
-            event.stopPropagation(); // Stop event from bubbling
+            event.stopPropagation();
             const action = dropdownAction.dataset.action;
             const comment = dropdownAction.closest('.comment');
             
-            // Add stop indicator
             dropdownAction.classList.add('stop-indicator');
             setTimeout(() => dropdownAction.classList.remove('stop-indicator'), 1000);
 
             handleDropdownAction(action, comment);
             
-            // Update event log to show propagation was stopped
             eventLog.innerHTML += '<div style="color: red">Event propagation stopped! ⛔</div>';
         }
     });
@@ -162,21 +244,7 @@ function logEvent(element, phase, event) {
         }
     }
 
-    // Update logEvent function to show when propagation is stopped
-    function logEvent(element, phase, event) {
-        const elementId = element.id || element.className || 'unnamed-element';
-        const phaseName = phase === 1 ? 'Capture' : phase === 2 ? 'Target' : 'Bubble';
-        phaseIndicator.textContent = `Current Phase: ${phaseName}`;
-        
-        let path = event.composedPath();
-        let pathString = path
-            .map(el => el.id || el.className || 'unnamed')
-            .join(' → ');
-            
-        eventLog.innerHTML = `
-            <div><strong>Event Target:</strong> ${event.target.id || event.target.className}</div>
-            <div><strong>Complete Path:</strong> ${pathString}</div>
-            <div><strong>Current Element:</strong> ${elementId} (${phaseName} phase)</div>
-        `;
-    }
+    // Initialize phase demo and toggles
+    setupPhaseDemo();
+    setupPhaseToggles();
 });
