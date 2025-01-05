@@ -50,6 +50,7 @@ body {
 
 /* Event propagation visualization */
 .highlight {
+    will-change: background-color;
     animation: highlightAnimation 1s ease;
 }
 

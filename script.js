@@ -44,6 +44,15 @@ function logEvent(element, phase, event) {
     }
 
     function handleAction(action, comment) {
+        if (!comment) {
+            console.warn('No comment element found');
+            return;
+        }
+
+        // Cache DOM elements
+        const repliesContainer = comment.querySelector('.replies');
+        const toggleButton = comment.querySelector('[data-action="toggle"]');
+
         switch(action) {
             case 'like':
                 comment.classList.add('highlight');
@@ -51,17 +60,19 @@ function logEvent(element, phase, event) {
                 break;
             case 'reply':
                 const newComment = createComment('New reply comment');
-                comment.querySelector('.replies')?.appendChild(newComment);
+                repliesContainer?.appendChild(newComment);
                 break;
             case 'share':
                 alert('Share functionality would go here');
                 break;
             case 'toggle':
-                const replies = comment.querySelector('.replies');
-                if (replies) {
-                    replies.classList.toggle('collapsed');
-                    const button = comment.querySelector('[data-action="toggle"]');
-                    button.textContent = replies.classList.contains('collapsed') ? '🔼 Show' : '🔽 Hide';
+                if (repliesContainer) {
+                    repliesContainer.classList.toggle('collapsed');
+                    if (toggleButton) {
+                        toggleButton.textContent = repliesContainer.classList.contains('collapsed') 
+                            ? '🔼 Show' 
+                            : '🔽 Hide';
+                    }
                 }
                 break;
         }
